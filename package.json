@@ -20,6 +20,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.8.0",
     "morgan": "^1.10.0",
+    "rimraf": "^6.0.0",
+    "typescript": "^5.6.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
@@ -29,8 +31,6 @@
     "@types/jsonwebtoken": "^9.0.0",
     "@types/morgan": "^1.9.0",
     "@types/node": "^20.0.0",
-    "rimraf": "^6.0.0",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.6.0"
+    "ts-node-dev": "^2.0.0"
   }
 }
