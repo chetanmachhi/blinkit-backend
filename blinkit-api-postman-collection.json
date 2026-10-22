@@ -1,0 +1,1702 @@
+{
+  "info": {
+    "_postman_id": "blinkit-delivery-api-collection",
+    "name": "Blinkit Instant Delivery API",
+    "description": "# Blinkit Instant Grocery Delivery API Documentation\n\nComplete, production-ready REST API for the Blinkit-style instant delivery platform.\n\n### 🚀 Quick Start Guide\n1. Make sure your backend is running at `http://localhost:3000`\n2. Open **Authentication > 1. Request OTP** to send an SMS/Dev OTP to your phone.\n3. Open **Authentication > 2. Verify OTP** with OTP `123456` (or the console dev OTP) - your `accessToken` and `refreshToken` will be saved automatically!\n4. Use **Store & Catalog > Catalog Home** or **Products > List Products** to browse the catalog.\n5. Add items to cart with **Cart > Add / Update Cart Item**, check out with **Orders > Create Order**, and track live delivery with **Orders > Track Order**.\n\n### 🔑 Environment Variables\n* `baseUrl`: `http://localhost:3000/api`\n* `accessToken`: Populated automatically after OTP verification or Admin Login\n* `adminToken`: Populated automatically after Admin Login\n* `storeId`: Default store ID `6ad8eebdfce460c6fde26605`\n* `x-store-id`: Sent in headers for store-specific operations (Cart, Catalog)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "storeId",
+      "value": "6ad8eebdfce460c6fde26605",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refreshToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "productId",
+      "value": "6ad8f6111899dff27bf5ee50",
+      "type": "string"
+    },
+    {
+      "key": "categoryId",
+      "value": "6ad8eebefce460c6fde26614",
+      "type": "string"
+    },
+    {
+      "key": "addressId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "orderId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "description": "Customer Phone OTP login flow, Admin email/password login, token rotation, and session management.",
+      "item": [
+        {
+          "name": "1. Request OTP (Customer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"9876543210\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/request-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "request-otp"
+              ]
+            },
+            "description": "Sends a 6-digit OTP to the customer's phone number. In development mode, the OTP is printed to the backend console (default dev OTP is `123456`).\n\n**Body Parameters:**\n* `phone` (string, required): 10 to 15 digit mobile phone number."
+          }
+        },
+        {
+          "name": "2. Verify OTP (Customer)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "        console.log('Saved accessToken and refreshToken to collection variables');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"9876543210\",\n  \"otp\": \"123456\",\n  \"name\": \"Rahul Sharma\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "Verifies the 6-digit OTP and authenticates the user. If the user is new, an account is automatically created with the provided `name`.\n\n**Test Script:** Automatically saves `accessToken` and `refreshToken` to Postman collection variables upon 200 OK."
+          }
+        },
+        {
+          "name": "3. Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "        pm.collectionVariables.set('refreshToken', json.data.refreshToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Exchange a valid `refreshToken` for a brand new `accessToken` and rotated `refreshToken`."
+          }
+        },
+        {
+          "name": "4. Admin Login (Email/Password)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.accessToken) {",
+                  "        pm.collectionVariables.set('adminToken', json.data.accessToken);",
+                  "        pm.collectionVariables.set('accessToken', json.data.accessToken);",
+                  "        console.log('Saved adminToken to collection variables');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@blinkit.com\",\n  \"password\": \"AdminPassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "admin",
+                "login"
+              ]
+            },
+            "description": "Authenticates an administrator using email & password. Automatically stores `adminToken` in collection variables."
+          }
+        },
+        {
+          "name": "5. Logout Current Session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revokes the active refresh token session for the authenticated user."
+          }
+        },
+        {
+          "name": "6. Logout All Devices",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout-all",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout-all"
+              ]
+            },
+            "description": "Invalidates all active refresh tokens and sessions across all user devices."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Dark Stores & Serviceability",
+      "description": "Dark store discovery, GPS serviceability checks, delivery radii, and store operating hours.",
+      "item": [
+        {
+          "name": "1. List All Stores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores"
+              ]
+            },
+            "description": "Returns all active dark stores in the network with their coordinates, address, and delivery parameters."
+          }
+        },
+        {
+          "name": "2. Find Nearby Stores (GPS)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/nearby?lat=12.9716&lng=77.6412",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "nearby"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "12.9716",
+                  "description": "Latitude of customer GPS location"
+                },
+                {
+                  "key": "lng",
+                  "value": "77.6412",
+                  "description": "Longitude of customer GPS location"
+                }
+              ]
+            },
+            "description": "Finds the nearest dark stores sorted by proximity to the provided GPS coordinates."
+          }
+        },
+        {
+          "name": "3. Check Store Serviceability",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}/serviceability?lat=12.9716&lng=77.6412",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "{{storeId}}",
+                "serviceability"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "12.9716",
+                  "description": "User latitude"
+                },
+                {
+                  "key": "lng",
+                  "value": "77.6412",
+                  "description": "User longitude"
+                }
+              ]
+            },
+            "description": "Checks whether a specific dark store can deliver to the user's location.\n\n**Returns:**\n* `serviceable`: boolean (is user within deliveryRadiusKm)\n* `distanceKm`: distance in kilometers\n* `isOpen`: boolean (is store open based on opensAt/closesAt)\n* `etaMinutes`: estimated delivery time (e.g. 10-15 mins)\n* `deliveryFee`, `minOrderAmount`"
+          }
+        },
+        {
+          "name": "4. Get Store Details by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "{{storeId}}"
+              ]
+            },
+            "description": "Returns detailed configuration for a specific dark store including delivery fees and operating hours."
+          }
+        },
+        {
+          "name": "5. Create Dark Store (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Blinkit Dark Store - Koramangala\",\n  \"phone\": \"9876543299\",\n  \"address\": \"80 Feet Road, 4th Block, Koramangala, Bengaluru\",\n  \"location\": {\n    \"lat\": 12.9352,\n    \"lng\": 77.6245\n  },\n  \"deliveryRadiusKm\": 15,\n  \"minOrderAmount\": 9900,\n  \"deliveryFee\": 2500,\n  \"freeDeliveryAbove\": 19900,\n  \"handlingFee\": 400,\n  \"avgPrepMinutes\": 10,\n  \"opensAt\": \"00:00\",\n  \"closesAt\": \"23:59\",\n  \"timezone\": \"Asia/Kolkata\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/stores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores"
+              ]
+            },
+            "description": "Creates a new dark store location. Requires Admin role."
+          }
+        },
+        {
+          "name": "6. Update Dark Store (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deliveryRadiusKm\": 50,\n  \"opensAt\": \"00:00\",\n  \"closesAt\": \"23:59\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/stores/{{storeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stores",
+                "{{storeId}}"
+              ]
+            },
+            "description": "Updates store configuration such as delivery radius or hours. Requires Admin role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Catalog Home & Categories",
+      "description": "Homepage feeds, product rails, categories, and subcategories.",
+      "item": [
+        {
+          "name": "1. Get Catalog Home Feed",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-store-id",
+                "value": "{{storeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/catalog/home",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "catalog",
+                "home"
+              ]
+            },
+            "description": "Fetches the homepage catalog layout for the customer app containing category rails and product lists tailored to the active dark store."
+          }
+        },
+        {
+          "name": "2. List All Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            },
+            "description": "Returns top-level grocery categories with their high-resolution icons and banner images."
+          }
+        },
+        {
+          "name": "3. List Subcategories of Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories?parentId={{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "parentId",
+                  "value": "{{categoryId}}",
+                  "description": "Parent Category ObjectId"
+                }
+              ]
+            },
+            "description": "Fetches subcategories for a given parent category."
+          }
+        },
+        {
+          "name": "4. Get Category by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Returns details of a specific category."
+          }
+        },
+        {
+          "name": "5. Create Category (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Organic & Gourmet\",\n  \"slug\": \"organic-and-gourmet\",\n  \"imageUrl\": \"https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500&q=80\",\n  \"sortOrder\": 9,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories"
+              ]
+            },
+            "description": "Creates a new category. Requires Admin role."
+          }
+        },
+        {
+          "name": "6. Update Category (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Organic, Fresh & Gourmet\",\n  \"sortOrder\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Updates category properties. Requires Admin role."
+          }
+        },
+        {
+          "name": "7. Delete Category (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/categories/{{categoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "categories",
+                "{{categoryId}}"
+              ]
+            },
+            "description": "Soft deletes a category. Requires Admin role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Products Catalog & Search",
+      "description": "Search, filter, pagination, price range, and stock management.",
+      "item": [
+        {
+          "name": "1. Search / List Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products?storeId={{storeId}}&q=milk&inStock=true&page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "storeId",
+                  "value": "{{storeId}}",
+                  "description": "Filter products by dark store ID"
+                },
+                {
+                  "key": "q",
+                  "value": "milk",
+                  "description": "Search query string"
+                },
+                {
+                  "key": "categoryId",
+                  "value": "{{categoryId}}",
+                  "disabled": true,
+                  "description": "Filter by category ID"
+                },
+                {
+                  "key": "inStock",
+                  "value": "true",
+                  "description": "Only show items with stock > 0"
+                },
+                {
+                  "key": "sort",
+                  "value": "price_asc",
+                  "disabled": true,
+                  "description": "price_asc, price_desc, discount, newest"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            },
+            "description": "Search and filter products across categories, prices, and stock availability."
+          }
+        },
+        {
+          "name": "2. Get Product Details by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "Returns product details, HD image gallery, nutritional info, unit, price in paise, and MRP."
+          }
+        },
+        {
+          "name": "3. Create Product (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"storeId\": \"{{storeId}}\",\n  \"categoryId\": \"{{categoryId}}\",\n  \"name\": \"Amul Taaza Homogenised Toned Milk 1L\",\n  \"description\": \"Pasteurised toned milk with 3.0% fat and 8.5% SNF.\",\n  \"brand\": \"Amul\",\n  \"unit\": \"1 L\",\n  \"mrp\": 7400,\n  \"price\": 6800,\n  \"stock\": 50,\n  \"maxPerOrder\": 6,\n  \"imageUrl\": \"https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80\",\n  \"images\": [\n    \"https://images.unsplash.com/photo-1550583724-b2692b85b150?w=500&q=80\"\n  ],\n  \"tags\": [\n    \"milk\",\n    \"dairy\",\n    \"amul\",\n    \"toned\"\n  ],\n  \"isAvailable\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "Creates a new grocery SKU in a dark store. Note: all prices and MRPs are in **paise** (1 INR = 100 paise). Requires Admin role."
+          }
+        },
+        {
+          "name": "4. Update Product Stock (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stock\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/stock",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}",
+                "stock"
+              ]
+            },
+            "description": "Updates inventory levels for a product. Can specify absolute `stock` or relative `delta` (e.g. `delta: -5`). Requires Admin role."
+          }
+        },
+        {
+          "name": "5. Update Product Details (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 6600,\n  \"maxPerOrder\": 10,\n  \"isAvailable\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "Updates pricing, limits, or availability. Requires Admin role."
+          }
+        },
+        {
+          "name": "6. Delete Product (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "Soft deletes a product. Requires Admin role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Shopping Cart",
+      "description": "Persistent shopping cart operations with store context, coupon application, and bill calculation.",
+      "item": [
+        {
+          "name": "1. Get User Cart",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-store-id",
+                "value": "{{storeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart"
+              ]
+            },
+            "description": "Fetches current shopping cart for user in the given dark store with line items, applied coupon, and full bill breakdown (itemTotal, discount, deliveryFee, handlingFee, grandTotal)."
+          }
+        },
+        {
+          "name": "2. Add / Update Cart Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-store-id",
+                "value": "{{storeId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "items"
+              ]
+            },
+            "description": "Sets the exact quantity of an item in the cart. Setting `quantity: 0` removes the item from the cart."
+          }
+        },
+        {
+          "name": "3. Remove Cart Item",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-store-id",
+                "value": "{{storeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/items/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "items",
+                "{{productId}}"
+              ]
+            },
+            "description": "Removes an item completely from the active cart."
+          }
+        },
+        {
+          "name": "4. Apply Coupon to Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-store-id",
+                "value": "{{storeId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"WELCOME50\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cart/coupon",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "coupon"
+              ]
+            },
+            "description": "Validates and applies a promotional coupon code (e.g. `WELCOME50`, `SAVE100`, `FESTIVE20`) to the active cart, updating the bill discount."
+          }
+        },
+        {
+          "name": "5. Remove Coupon from Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-store-id",
+                "value": "{{storeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/coupon",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "coupon"
+              ]
+            },
+            "description": "Removes the currently applied coupon from the active cart."
+          }
+        },
+        {
+          "name": "6. Clear Cart",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-store-id",
+                "value": "{{storeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/cart/clear",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cart",
+                "clear"
+              ]
+            },
+            "description": "Clears all items and applied coupons from the cart."
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Saved Delivery Addresses",
+      "description": "Manage customer delivery addresses (Home, Work, Other) with GPS coordinates.",
+      "item": [
+        {
+          "name": "1. List Saved Addresses",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.length > 0) {",
+                  "        pm.collectionVariables.set('addressId', json.data[0]._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses"
+              ]
+            },
+            "description": "Returns all saved addresses for the authenticated customer."
+          }
+        },
+        {
+          "name": "2. Create Saved Address",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data._id) {",
+                  "        pm.collectionVariables.set('addressId', json.data._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"HOME\",\n  \"receiverName\": \"Rahul Sharma\",\n  \"receiverPhone\": \"9876543210\",\n  \"addressLine\": \"Flat 402, Green Glen Apartments, 12th Main Road, Indiranagar\",\n  \"landmark\": \"Near Metro Pillar 84\",\n  \"city\": \"Bengaluru\",\n  \"pincode\": \"560038\",\n  \"coordinates\": {\n    \"lat\": 12.9716,\n    \"lng\": 77.6412\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/addresses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses"
+              ]
+            },
+            "description": "Saves a new delivery address with geo coordinates for serviceability checks."
+          }
+        },
+        {
+          "name": "3. Update Saved Address",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"WORK\",\n  \"addressLine\": \"Embassy TechVillage, Tower 2B, 3rd Floor, Bellandur\",\n  \"city\": \"Bengaluru\",\n  \"pincode\": \"560103\",\n  \"coordinates\": {\n    \"lat\": 12.9304,\n    \"lng\": 77.6858\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/addresses/{{addressId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses",
+                "{{addressId}}"
+              ]
+            },
+            "description": "Updates an existing saved address."
+          }
+        },
+        {
+          "name": "4. Set Address as Default",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/addresses/{{addressId}}/default",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses",
+                "{{addressId}}",
+                "default"
+              ]
+            },
+            "description": "Sets the selected address as the primary default address for checkout."
+          }
+        },
+        {
+          "name": "5. Delete Saved Address",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/addresses/{{addressId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "addresses",
+                "{{addressId}}"
+              ]
+            },
+            "description": "Deletes a saved address."
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Orders & Live Tracking",
+      "description": "Order placement, history, live delivery status, cancellation, and reordering.",
+      "item": [
+        {
+          "name": "1. Place New Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data._id) {",
+                  "        pm.collectionVariables.set('orderId', json.data._id);",
+                  "        console.log('Saved orderId:', json.data._id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              },
+              {
+                "key": "x-store-id",
+                "value": "{{storeId}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"addressId\": \"{{addressId}}\",\n  \"paymentMethod\": \"COD\",\n  \"notes\": \"Please leave package at the front door.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "Places a new instant delivery order using items in the active cart and the selected delivery address.\n\n**Parameters:**\n* `addressId` (string, optional if deliveryAddress provided)\n* `paymentMethod`: `COD`, `UPI`, `CARD`, `WALLET`\n* `couponCode`: optional promo code\n* `notes`: optional delivery instructions"
+          }
+        },
+        {
+          "name": "2. List Order History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders?page=1&limit=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "status",
+                  "value": "delivered",
+                  "disabled": true,
+                  "description": "Filter by OrderStatus"
+                }
+              ]
+            },
+            "description": "Fetches past orders placed by the authenticated customer with order numbers and status."
+          }
+        },
+        {
+          "name": "3. Get Order Details by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}"
+              ]
+            },
+            "description": "Returns complete itemized receipt, pricing, delivery address, and payment status."
+          }
+        },
+        {
+          "name": "4. Track Order Live",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/track",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "track"
+              ]
+            },
+            "description": "Returns real-time tracking progression (placed -> confirmed -> packing -> out_for_delivery -> delivered), rider name/phone, and estimated arrival time."
+          }
+        },
+        {
+          "name": "5. Cancel Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Ordered by mistake\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "cancel"
+              ]
+            },
+            "description": "Cancels an order if it is still in `placed` or `confirmed` stage and restores inventory."
+          }
+        },
+        {
+          "name": "6. Reorder (Add Items to Cart)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/reorder",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "reorder"
+              ]
+            },
+            "description": "Copies all items from a past order into the current active cart for fast 1-click reordering."
+          }
+        },
+        {
+          "name": "7. Update Order Status (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"delivered\",\n  \"note\": \"Delivered to customer\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/orders/{{orderId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "{{orderId}}",
+                "status"
+              ]
+            },
+            "description": "Advances the order lifecycle. Valid statuses: `placed`, `confirmed`, `packing`, `out_for_delivery`, `delivered`, `cancelled`. Requires Admin role."
+          }
+        },
+        {
+          "name": "8. Get Store Orders Queue (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/orders/store/{{storeId}}?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "orders",
+                "store",
+                "{{storeId}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": "packing",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieves the dark store fulfillment queue. Requires Admin role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Coupons & Promotions",
+      "description": "Discount vouchers, minimum order thresholds, and coupon administration.",
+      "item": [
+        {
+          "name": "1. Get Applicable Coupons",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-store-id",
+                "value": "{{storeId}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/coupons/applicable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "coupons",
+                "applicable"
+              ]
+            },
+            "description": "Returns currently active coupons available for the dark store."
+          }
+        },
+        {
+          "name": "2. List All Coupons (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/coupons/admin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "coupons",
+                "admin"
+              ]
+            },
+            "description": "Lists all promotional coupons created in the system. Requires Admin role."
+          }
+        },
+        {
+          "name": "3. Create Coupon (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"FLAT150\",\n  \"description\": \"Flat ₹150 off on orders above ₹499\",\n  \"type\": \"FLAT\",\n  \"value\": 15000,\n  \"minOrderAmount\": 49900,\n  \"validFrom\": \"2026-01-01T00:00:00.000Z\",\n  \"validTo\": \"2026-12-31T23:59:59.000Z\",\n  \"usageLimit\": 1000,\n  \"perUserLimit\": 2,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/coupons",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "coupons"
+              ]
+            },
+            "description": "Creates a new coupon. `type`: `PERCENTAGE` or `FLAT`. Note: all currency values are in paise. Requires Admin role."
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. User Profile",
+      "description": "Manage customer profile info, name, and email.",
+      "item": [
+        {
+          "name": "1. Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "description": "Returns profile details (name, phone, email, role) of the currently authenticated user."
+          }
+        },
+        {
+          "name": "2. Update User Profile",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Rahul S. Sharma\",\n  \"email\": \"rahul.sharma@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "description": "Updates user's display name or email address."
+          }
+        },
+        {
+          "name": "3. Delete User Account",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "description": "Soft deletes the user account and revokes active sessions."
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Admin Dashboard & Inventory Alerts",
+      "description": "Business analytics, total GMV, order volume, and low stock warnings.",
+      "item": [
+        {
+          "name": "1. Get Admin Dashboard Analytics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/dashboard?storeId={{storeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "storeId",
+                  "value": "{{storeId}}"
+                }
+              ]
+            },
+            "description": "Returns executive metrics: Total GMV revenue, total orders placed, average order value (AOV), active user count, and top-selling products. Requires Admin role."
+          }
+        },
+        {
+          "name": "2. Get Low Stock Inventory Alerts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/low-stock?storeId={{storeId}}&threshold=15",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "low-stock"
+              ],
+              "query": [
+                {
+                  "key": "storeId",
+                  "value": "{{storeId}}"
+                },
+                {
+                  "key": "threshold",
+                  "value": "15",
+                  "description": "Trigger alert if stock is less than this value"
+                }
+              ]
+            },
+            "description": "Returns SKUs that need restocking in the dark store. Requires Admin role."
+          }
+        },
+        {
+          "name": "3. List Registered Users (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users?page=1&limit=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "q",
+                  "value": "Rahul",
+                  "disabled": true,
+                  "description": "Search by name or phone"
+                }
+              ]
+            },
+            "description": "Search and paginate through customer and admin accounts. Requires Admin role."
+          }
+        }
+      ]
+    }
+  ]
+}
