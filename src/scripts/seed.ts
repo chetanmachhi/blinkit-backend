@@ -16,6 +16,7 @@ const seed = async (): Promise<void> => {
     let store = await Store.findOne({ phone: "9876543210" });
     if (!store) {
       store = await Store.create({
+        _id: new mongoose.Types.ObjectId("6ad8eebdfce460c6fde26605"),
         name: "Blinkit Dark Store - Indiranagar",
         phone: "9876543210",
         address: "100 Feet Road, Indiranagar, Bengaluru, Karnataka 560038",
