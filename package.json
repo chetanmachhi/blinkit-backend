@@ -1,14 +1,24 @@
 {
   "name": "blinkit-backend",
   "version": "1.0.0",
-  "description": "Production-grade Express.js + TypeScript + MongoDB backend for instant grocery delivery",
+  "description": "Blinkit backend (modular monolith): customer, store-admin and delivery modules in one deployable service",
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "rimraf dist && tsc",
     "start": "node dist/server.js",
-    "seed": "ts-node-dev --transpile-only src/scripts/seed.ts",
-    "seed:prod": "node dist/scripts/seed.js"
+    "typecheck": "tsc --noEmit",
+    "dev:customer": "ts-node-dev --respawn --transpile-only src/modules/customer/server.ts",
+    "dev:store": "ts-node-dev --respawn --transpile-only src/modules/store/server.ts",
+    "dev:delivery": "ts-node-dev --respawn --transpile-only src/modules/delivery/server.ts",
+    "seed": "ts-node-dev --transpile-only src/modules/customer/scripts/seed.ts",
+    "seed:store": "ts-node-dev --transpile-only src/modules/store/scripts/seedStore.ts",
+    "seed:demo": "ts-node-dev --transpile-only src/modules/store/scripts/seedDemo.ts",
+    "seed:riders": "ts-node-dev --transpile-only src/modules/delivery/scripts/seedRiders.ts",
+    "seed:prod": "node dist/modules/customer/scripts/seed.js",
+    "seed:store:prod": "node dist/modules/store/scripts/seedStore.js",
+    "seed:demo:prod": "node dist/modules/store/scripts/seedDemo.js",
+    "seed:riders:prod": "node dist/modules/delivery/scripts/seedRiders.js"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.0",
@@ -32,5 +42,8 @@
   },
   "devDependencies": {
     "ts-node-dev": "^2.0.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

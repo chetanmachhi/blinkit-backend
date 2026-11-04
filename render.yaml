@@ -1,0 +1,44 @@
+services:
+  # One service runs every module (customer, store-admin, delivery).
+  - type: web
+    name: blinkit-backend
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_ACCESS_SECRET
+        sync: false
+      - key: JWT_REFRESH_SECRET
+        sync: false
+      - key: JWT_ACCESS_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: CORS_ORIGINS
+        sync: false
+      - key: DEFAULT_STORE_ID
+        value: 6ad8eebdfce460c6fde26605
+      - key: OTP_TTL_MINUTES
+        value: 5
+      - key: OTP_MAX_ATTEMPTS
+        value: 5
+      - key: DEV_FIXED_OTP
+        value: 123456
+      - key: ADMIN_BOOTSTRAP_EMAIL
+        value: admin@blinkit.com
+      - key: ADMIN_BOOTSTRAP_PASSWORD
+        sync: false
+      - key: ENABLE_DEMO_TOOLS
+        value: "true"
+      - key: SEED_DEMO_RIDERS
+        value: "true"
+      - key: DEMO_RIDER_PASSWORD
+        sync: false

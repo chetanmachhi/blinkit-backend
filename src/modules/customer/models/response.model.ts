@@ -1,0 +1,1 @@
+export { ResponseModel } from "../../../shared";
