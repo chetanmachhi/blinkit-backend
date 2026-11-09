@@ -14,7 +14,7 @@ export const dashboardQuerySchema = z
 export const salesReportQuerySchema = z
   .object({
     storeId: z.string().regex(objectIdRegex).optional(),
-    groupBy: z.enum(["day"]).default("day").optional(),
+    groupBy: z.enum(["day", "hour"]).default("day").optional(),
     range: z.enum(["today", "7d", "30d"]).optional(),
     from: z.string().optional(),
     to: z.string().optional(),

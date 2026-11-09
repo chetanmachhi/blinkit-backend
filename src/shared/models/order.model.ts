@@ -226,13 +226,36 @@ orderSchema.index({ storeId: 1, createdAt: -1 });
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ storeId: 1, status: 1, createdAt: -1 });
 orderSchema.index({ riderId: 1, status: 1, createdAt: -1 });
+const IDEMPOTENCY_INDEX = "idempotencyKey_1_userId_1_partial";
+
 orderSchema.index(
   { idempotencyKey: 1, userId: 1 },
   {
+    // Only orders that carry a real key are unique per user. (MongoDB does not
+    // allow "sparse" together with partialFilterExpression, and a sparse compound
+    // index still indexes every order with a userId, making key-less orders collide.)
+    name: IDEMPOTENCY_INDEX,
     unique: true,
-    sparse: true,
     partialFilterExpression: { idempotencyKey: { $type: "string" } },
   }
 );
 
 export const Order = mongoose.model<IOrder>("Order", orderSchema);
+
+/**
+ * One-time repair for databases created with the old sparse index, which made
+ * a customer's second key-less order (or any demo order) fail with
+ * "Duplicate value for idempotencyKey". Safe to run on every boot.
+ */
+export const repairOrderIndexes = async (): Promise<void> => {
+  const collection = Order.collection;
+  const indexes = await collection.indexes().catch(() => []);
+  const legacy = indexes.find(
+    (i) => i.key?.idempotencyKey === 1 && i.key?.userId === 1 && !i.partialFilterExpression
+  );
+  if (legacy?.name) {
+    await collection.dropIndex(legacy.name);
+    console.log(`[DB] Dropped legacy order index "${legacy.name}"`);
+  }
+  await Order.createIndexes();
+};

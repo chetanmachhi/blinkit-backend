@@ -22,8 +22,27 @@ const getStoreMidnight = (timezone: string, daysAgo: number = 0): Date => {
   const month = parseInt(parts.find((p) => p.type === "month")?.value || "1", 10) - 1;
   const day = parseInt(parts.find((p) => p.type === "day")?.value || "1", 10);
 
-  const localMidnightUtc = new Date(Date.UTC(year, month, day - daysAgo, 0, 0, 0));
-  return localMidnightUtc;
+  // Midnight in the store's timezone (e.g. 00:00 IST = 18:30 UTC the day before),
+  // so "today"/"yesterday" match the per-day buckets used by the sales report.
+  const naiveUtcMidnight = new Date(Date.UTC(year, month, day - daysAgo, 0, 0, 0));
+  return new Date(naiveUtcMidnight.getTime() - timezoneOffsetMs(naiveUtcMidnight, timezone));
+};
+
+/** Offset of `timeZone` from UTC at `date`, in ms (IST = +19800000). */
+const timezoneOffsetMs = (date: Date, timeZone: string): number => {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(date);
+  const get = (t: string) => parseInt(parts.find((p) => p.type === t)?.value || "0", 10);
+  const asUtc = Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute"), get("second"));
+  return asUtc - date.getTime();
 };
 
 export const getDashboardAnalytics = async (
@@ -272,7 +291,7 @@ export const getDashboardAnalytics = async (
 
 export const getSalesReportData = async (
   storeId: string,
-  query: { range?: string; from?: string; to?: string }
+  query: { range?: string; from?: string; to?: string; groupBy?: "day" | "hour" }
 ): Promise<any> => {
   const store = await Store.findById(storeId);
   const timezone = store?.timezone || "Asia/Kolkata";
@@ -304,7 +323,8 @@ export const getSalesReportData = async (
       $group: {
         _id: {
           $dateToString: {
-            format: "%Y-%m-%d",
+            // "hour" buckets look like "2026-11-09 14"
+            format: query.groupBy === "hour" ? "%Y-%m-%d %H" : "%Y-%m-%d",
             date: "$createdAt",
             timezone,
           },

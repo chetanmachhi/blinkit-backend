@@ -23,7 +23,11 @@ export const createCouponSchema = z
     perUserLimit: z.number().int().positive().default(1),
     storeId: z.string().regex(objectIdRegex).nullable().optional(),
   })
-  .strict();
+  .strict()
+  .refine((c) => c.type !== CouponType.PERCENT || c.value <= 100, {
+    message: "Percentage discount cannot exceed 100%",
+    path: ["value"],
+  });
 
 export const updateCouponSchema = z
   .object({
@@ -39,4 +43,8 @@ export const updateCouponSchema = z
     perUserLimit: z.number().int().positive().optional(),
     isActive: z.boolean().optional(),
   })
-  .strict();
+  .strict()
+  .refine((c) => c.type !== CouponType.PERCENT || c.value === undefined || c.value <= 100, {
+    message: "Percentage discount cannot exceed 100%",
+    path: ["value"],
+  });

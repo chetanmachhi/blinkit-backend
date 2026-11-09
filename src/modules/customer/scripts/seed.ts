@@ -8,6 +8,9 @@ import { Coupon } from "../models/coupon.model";
 import { Role, CouponType } from "../constants/enums";
 import { hashPassword } from "../utils/hash.util";
 
+/** ₹20 for testing (amounts are in paise). Production-like value was 9900 (₹99). */
+const DEMO_MIN_ORDER_PAISE = 2000;
+
 const seed = async (): Promise<void> => {
   try {
     await mongoose.connect(config.MONGO_URI);
@@ -27,7 +30,7 @@ const seed = async (): Promise<void> => {
           coordinates: [73.1695, 22.3175],
         },
         deliveryRadiusKm: 50,
-        minOrderAmount: 9900,
+        minOrderAmount: DEMO_MIN_ORDER_PAISE,
         deliveryFee: 2500,
         freeDeliveryAbove: 19900,
         handlingFee: 400,
@@ -45,6 +48,7 @@ const seed = async (): Promise<void> => {
         coordinates: [73.1695, 22.3175],
       };
       store.deliveryRadiusKm = 50;
+      store.minOrderAmount = DEMO_MIN_ORDER_PAISE;
       store.opensAt = "00:00";
       store.closesAt = "23:59";
       store.isActive = true;
@@ -511,7 +515,7 @@ const seed = async (): Promise<void> => {
         code: "BLINKIT20",
         description: "20% off up to ₹100 on orders above ₹299",
         type: CouponType.PERCENT,
-        value: 2000,
+        value: 20, // percent (flat coupons are in paise)
         maxDiscount: 10000,
         minOrderAmount: 29900,
         validFrom: now,
@@ -523,7 +527,7 @@ const seed = async (): Promise<void> => {
         code: "FRESH15",
         description: "15% off up to ₹75 on fresh produce",
         type: CouponType.PERCENT,
-        value: 1500,
+        value: 15, // percent
         maxDiscount: 7500,
         minOrderAmount: 14900,
         validFrom: now,
